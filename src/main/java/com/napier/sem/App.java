@@ -166,52 +166,6 @@ public class App {
             // Create string for SQL statement
             String strSelect =
                     "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
-                            "FROM employees, salaries, titles " +
-                            "WHERE employees.emp_no = salaries.emp_no " +
-                            "AND employees.emp_no = titles.emp_no " +
-                            "AND salaries.to_date = '9999-01-01' " +
-                            "AND titles.to_date = '9999-01-01' " +
-                            "ORDER BY employees.emp_no ASC ";
-
-            // Execute SQL statement
-            ResultSet rset = stmt.executeQuery(strSelect);
-
-            while(rset.next()){
-
-                row[0] = rset.getString("employees.emp_no");
-                row[1] = rset.getString("employees.first_name");
-                row[2] = rset.getString("employees.last_name");
-                row[3] = rset.getString("salaries.salary");
-
-                // https://www.c-sharpcorner.com/article/how-to-copy-an-array-in-c-sharp/#:~:text=A%3A%20When%20you%20copy%20an,those%20in%20the%20original%20Array.
-                data.add(row.clone());
-            }
-
-            return data;
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println("Failed to get salary details");
-            return null;
-        }
-    }
-
-    /**
-     * Retrieves salary details of all employees from database in ascending order by employees' IDs.
-     * @return ArrayList with arrays of Strings, each with employee's id, employee's first name, employee's last name
-     * and its salary
-     */
-    public ArrayList<String[]> getSalaries(String role) {
-
-        String[] row = new String[4];
-        ArrayList<String[]> data = new ArrayList<>();
-
-        try {
-            // Create an SQL statement
-            Statement stmt = con.createStatement();
-            // Create string for SQL statement
-            String strSelect =
-                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
                             "FROM employees, salaries " +
                             "WHERE employees.emp_no = salaries.emp_no " +
                             "AND salaries.to_date = '9999-01-01' " +
@@ -235,7 +189,7 @@ public class App {
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            System.out.println("Failed to get salary per role details");
+            System.out.println("Failed to get salary details");
             return null;
         }
     }

@@ -13,15 +13,24 @@ public class App {
         // Connect to database
         database.connect();
 
-        // UC-6
+        // UC-06
         // Get Employee
         Employee emp = database.getEmployee(255530);
         // Display results
         database.displayEmployee(emp);
 
-        // UC-1
+        // UC-01: labs solution
+        // Extract employee salary information
+        ArrayList<Employee> employees = database.getAllSalaries();
+        // Test the size of the returned data - should be 240124
+        System.out.println(employees.size());
+
+        // UC-01: first attempt
         // Get all salaries
-        database.displaySalaries(database.getSalaries());
+        //database.displaySalaries(database.getSalaries());
+        // UC-04
+        // Get all salaries by role
+        //database.displaySalaries(database.getSalaries("Engineer"));
 
         // Disconnect from database
         database.disconnect();
@@ -151,6 +160,45 @@ public class App {
     }
 
     /**
+     * Gets all the current employees and salaries.
+     * @return A list of all employees and salaries, or null if there is an error.
+     */
+    public ArrayList<Employee> getAllSalaries()
+    {
+        try
+        {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary "
+                            + "FROM employees, salaries "
+                            + "WHERE employees.emp_no = salaries.emp_no AND salaries.to_date = '9999-01-01' "
+                            + "ORDER BY employees.emp_no ASC";
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Extract employee information
+            ArrayList<Employee> employees = new ArrayList<Employee>();
+            while (rset.next())
+            {
+                Employee emp = new Employee();
+                emp.emp_no = rset.getInt("employees.emp_no");
+                emp.first_name = rset.getString("employees.first_name");
+                emp.last_name = rset.getString("employees.last_name");
+                emp.salary = rset.getInt("salaries.salary");
+                employees.add(emp);
+            }
+            return employees;
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get salary details");
+            return null;
+        }
+    }
+
+    /**
      * Retrieves salary details of all employees from database in ascending order by employees' IDs.
      * @return ArrayList with arrays of Strings, each with employee's id, employee's first name, employee's last name
      * and its salary
@@ -190,6 +238,55 @@ public class App {
         } catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get salary details");
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves salary details of all employees from database by the role title, in ascending order by employees' IDs.
+     * @return ArrayList with arrays of Strings, each with employee's id, employee's first name, employee's last name
+     * and its salary
+     */
+    public ArrayList<String[]> getSalaries(String role) {
+
+        String[] row = new String[4];
+        ArrayList<String[]> data = new ArrayList<>();
+
+        try {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
+                            "FROM employees, salaries, titles " +
+                            "WHERE employees.emp_no = salaries.emp_no " +
+                            "AND employees.emp_no = titles.emp_no " +
+                            "AND salaries.to_date = '9999-01-01' " +
+                            "AND titles.to_date = '9999-01-01' " +
+                            //"AND titles.title = '<role>' " +
+                            "AND titles.to_date = " + role + " " +
+                            "ORDER BY employees.emp_no ASC ";
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+
+            while(rset.next()){
+
+                row[0] = rset.getString("employees.emp_no");
+                row[1] = rset.getString("employees.first_name");
+                row[2] = rset.getString("employees.last_name");
+                row[3] = rset.getString("salaries.salary");
+
+                // https://www.c-sharpcorner.com/article/how-to-copy-an-array-in-c-sharp/#:~:text=A%3A%20When%20you%20copy%20an,those%20in%20the%20original%20Array.
+                data.add(row.clone());
+            }
+
+            return data;
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get salary per role details");
             return null;
         }
     }

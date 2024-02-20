@@ -1,4 +1,4 @@
-version: '3'
+version: '4'
 services:
   # Application Dockerfile is in same folder which is .
   app:

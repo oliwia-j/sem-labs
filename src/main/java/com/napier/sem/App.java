@@ -1,9 +1,7 @@
 package com.napier.sem;
 
-import java.io.Console;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 
 public class App {
     public static void main(String[] args) {
@@ -16,22 +14,30 @@ public class App {
         // UC-06
         // Get Employee
         Employee emp = database.getEmployee(255530);
-        // Display results
+        // Display result
         database.displayEmployee(emp);
 
-        // UC-01: labs solution
-        // Extract employee salary information
+        // UC-01
+        // Extract all employees salary information
         ArrayList<Employee> employees = database.getAllSalaries();
         // Test the size of the returned data - should be 240124
         System.out.println(employees.size());
+        // Display all salaries
         database.printSalaries(employees);
 
-        // UC-01: first attempt
-        // Get all salaries
-        //database.displaySalaries(database.getSalaries());
         // UC-04
-        // Get all salaries by role
-        //database.displaySalaries(database.getSalaries("Engineer"));
+        // Extract employees salary information of specified role
+        ArrayList<Employee> employeesByRole = database.getSalaries("Engineer");
+        // Display salaries per role
+        database.printSalaries(employeesByRole);
+
+        // UC-02
+        // Extract data of specified department and create object
+        Department department = database.getDepartment("Sales");
+        // Extract salaries of employees from specified department
+        ArrayList<Employee> employeesByDept = database.getSalariesByDepartment(department);
+        // Display salaries of the employees of the specified department
+        database.printSalaries(employeesByDept);
 
         // Disconnect from database
         database.disconnect();
@@ -88,9 +94,9 @@ public class App {
     }
 
     /**
-     * Retrieves from database details of the employee of the provided ID
+     * Retrieves from database details of the employee with provided ID.
      * @param ID
-     * @return Employee object
+     * @return Employee object, or null if there is an error.
      */
     public Employee getEmployee(int ID) {
         try {
@@ -144,8 +150,8 @@ public class App {
     }
 
     /**
-     * Prints to console details of the provided Employee object.
-     * @param emp
+     * Prints to console details of the provided Employee.
+     * @param emp The employee to print its details.
      */
     public void displayEmployee(Employee emp) {
         if (emp != null) {
@@ -161,13 +167,11 @@ public class App {
     }
 
     /**
-     * Gets all the current employees and salaries.
+     * Get all the current employees and salaries.
      * @return A list of all employees and salaries, or null if there is an error.
      */
-    public ArrayList<Employee> getAllSalaries()
-    {
-        try
-        {
+    public ArrayList<Employee> getAllSalaries() {
+        try {
             // Create an SQL statement
             Statement stmt = con.createStatement();
             // Create string for SQL statement
@@ -175,13 +179,12 @@ public class App {
                     "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary "
                             + "FROM employees, salaries "
                             + "WHERE employees.emp_no = salaries.emp_no AND salaries.to_date = '9999-01-01' "
-                            + "ORDER BY employees.emp_no ASC";
+                            + "ORDER BY employees.emp_no ASC ";
             // Execute SQL statement
             ResultSet rset = stmt.executeQuery(strSelect);
             // Extract employee information
             ArrayList<Employee> employees = new ArrayList<Employee>();
-            while (rset.next())
-            {
+            while (rset.next()) {
                 Employee emp = new Employee();
                 emp.emp_no = rset.getInt("employees.emp_no");
                 emp.first_name = rset.getString("employees.first_name");
@@ -190,9 +193,7 @@ public class App {
                 employees.add(emp);
             }
             return employees;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get salary details");
             return null;
@@ -200,16 +201,14 @@ public class App {
     }
 
     /**
-     * Prints a list of employees.
+     * Prints a list of employees and their salaries.
      * @param employees The list of employees to print.
      */
-    public void printSalaries(ArrayList<Employee> employees)
-    {
+    public void printSalaries(ArrayList<Employee> employees) {
         // Print header
         System.out.println(String.format("%-10s %-15s %-20s %-8s", "Emp No", "First Name", "Last Name", "Salary"));
         // Loop over all employees in the list
-        for (Employee emp : employees)
-        {
+        for (Employee emp : employees) {
             String emp_string =
                     String.format("%-10s %-15s %-20s %-8s",
                             emp.emp_no, emp.first_name, emp.last_name, emp.salary);
@@ -217,116 +216,40 @@ public class App {
         }
     }
 
-
     /**
-     * Retrieves salary details of all employees from database in ascending order by employees' IDs.
-     * @return ArrayList with arrays of Strings, each with employee's id, employee's first name, employee's last name
-     * and its salary
+     * Get all the current employees and salaries for specified role title.
+     * @return A list of all employees and salaries by a role, or null if there is an error.
      */
-    public ArrayList<String[]> getSalaries() {
-
-        String[] row = new String[4];
-        ArrayList<String[]> data = new ArrayList<>();
-
+    public ArrayList<Employee> getSalaries(String role) {
         try {
             // Create an SQL statement
             Statement stmt = con.createStatement();
             // Create string for SQL statement
             String strSelect =
-                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
-                            "FROM employees, salaries " +
-                            "WHERE employees.emp_no = salaries.emp_no " +
-                            "AND salaries.to_date = '9999-01-01' " +
-                            "ORDER BY employees.emp_no ASC ";
-
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary "
+                            + "FROM employees, salaries, titles "
+                            + "WHERE employees.emp_no = salaries.emp_no AND salaries.to_date = '9999-01-01' "
+                            + "AND  employees.emp_no = titles.emp_no "
+                            + "AND titles.to_date = '9999-01-01' "
+                            + "AND titles.title = '" + role+ "' "
+                            + "ORDER BY employees.emp_no ASC ";
             // Execute SQL statement
             ResultSet rset = stmt.executeQuery(strSelect);
-
-            while(rset.next()){
-
-                row[0] = rset.getString("employees.emp_no");
-                row[1] = rset.getString("employees.first_name");
-                row[2] = rset.getString("employees.last_name");
-                row[3] = rset.getString("salaries.salary");
-
-                // https://www.c-sharpcorner.com/article/how-to-copy-an-array-in-c-sharp/#:~:text=A%3A%20When%20you%20copy%20an,those%20in%20the%20original%20Array.
-                data.add(row.clone());
+            // Extract employee information
+            ArrayList<Employee> employees = new ArrayList<Employee>();
+            while (rset.next()) {
+                Employee emp = new Employee();
+                emp.emp_no = rset.getInt("employees.emp_no");
+                emp.first_name = rset.getString("employees.first_name");
+                emp.last_name = rset.getString("employees.last_name");
+                emp.salary = rset.getInt("salaries.salary");
+                employees.add(emp);
             }
-
-            return data;
-
+            return employees;
         } catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get salary details");
             return null;
-        }
-    }
-
-    /**
-     * Retrieves salary details of all employees from database by the role title, in ascending order by employees' IDs.
-     * @return ArrayList with arrays of Strings, each with employee's id, employee's first name, employee's last name
-     * and its salary
-     */
-    public ArrayList<String[]> getSalaries(String role) {
-
-        String[] row = new String[4];
-        ArrayList<String[]> data = new ArrayList<>();
-
-        try {
-            // Create an SQL statement
-            Statement stmt = con.createStatement();
-            // Create string for SQL statement
-            String strSelect =
-                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
-                            "FROM employees, salaries, titles " +
-                            "WHERE employees.emp_no = salaries.emp_no " +
-                            "AND employees.emp_no = titles.emp_no " +
-                            "AND salaries.to_date = '9999-01-01' " +
-                            "AND titles.to_date = '9999-01-01' " +
-                            //"AND titles.title = '<role>' " +
-                            "AND titles.to_date = " + role + " " +
-                            "ORDER BY employees.emp_no ASC ";
-
-
-            // Execute SQL statement
-            ResultSet rset = stmt.executeQuery(strSelect);
-
-            while(rset.next()){
-
-                row[0] = rset.getString("employees.emp_no");
-                row[1] = rset.getString("employees.first_name");
-                row[2] = rset.getString("employees.last_name");
-                row[3] = rset.getString("salaries.salary");
-
-                // https://www.c-sharpcorner.com/article/how-to-copy-an-array-in-c-sharp/#:~:text=A%3A%20When%20you%20copy%20an,those%20in%20the%20original%20Array.
-                data.add(row.clone());
-            }
-
-            return data;
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            System.out.println("Failed to get salary per role details");
-            return null;
-        }
-    }
-
-    /**
-     * Prints to console details of the provided salaries
-     * @param salaryDetails
-     */
-    public void displaySalaries(ArrayList<String[]> salaryDetails){
-        if (salaryDetails != null) {
-
-            for (String[] salaryDetail : salaryDetails) {
-                for (String s : salaryDetail) {
-
-                    // Printing columns of the same size
-                    // https://www.c-sharpcorner.com/article/how-to-copy-an-array-in-c-sharp/#:~:text=A%3A%20When%20you%20copy%20an,those%20in%20the%20original%20Array.
-                    System.out.printf("%-20s", s);
-                }
-                System.out.println();
-            }
         }
     }
 

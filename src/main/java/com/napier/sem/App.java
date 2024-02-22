@@ -31,14 +31,6 @@ public class App {
         // Display salaries per role
         database.printSalaries(employeesByRole);
 
-        // UC-02
-        // Extract data of specified department and create object
-        Department department = database.getDepartment("Sales");
-        // Extract salaries of employees from specified department
-        ArrayList<Employee> employeesByDept = database.getSalariesByDepartment(department);
-        // Display salaries of the employees of the specified department
-        database.printSalaries(employeesByDept);
-
         // Disconnect from database
         database.disconnect();
     }

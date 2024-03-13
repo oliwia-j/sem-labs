@@ -6,41 +6,45 @@ import java.util.ArrayList;
 public class App {
     public static void main(String[] args) {
         // Create new Application
-        App database = new App();
+        App app = new App();
 
         // Connect to database
-        database.connect();
+        if(args.length < 1){
+            app.connect("localhost:33060", 30000);
+        }else{
+            app.connect(args[0], Integer.parseInt(args[1]));
+        }
 
         // UC-06
         // Get Employee
-        Employee emp = database.getEmployee(255530);
+        Employee emp = app.getEmployee(255530);
         // Display result
-        database.displayEmployee(emp);
+        app.displayEmployee(emp);
 
         // UC-01
         // Extract all employees salary information
-        ArrayList<Employee> employees = database.getAllSalaries();
+        ArrayList<Employee> employees = app.getAllSalaries();
         // Test the size of the returned data - should be 240124
         System.out.println(employees.size());
         // Display all salaries
-        database.printSalaries(employees);
+        app.printSalaries(employees);
 
         // UC-04
         // Extract employees salary information of specified role
-        ArrayList<Employee> employeesByRole = database.getSalaries("Engineer");
+        ArrayList<Employee> employeesByRole = app.getSalaries("Engineer");
         // Display salaries per role
-        database.printSalaries(employeesByRole);
+        app.printSalaries(employeesByRole);
 
         // UC-02
         // Extract data of specified department and create object
-        Department department = database.getDepartment("Sales");
+        Department department = app.getDepartment("Sales");
         // Extract salaries of employees from specified department
-        ArrayList<Employee> employeesByDept = database.getSalariesByDepartment(department);
+        ArrayList<Employee> employeesByDept = app.getSalariesByDepartment(department);
         // Display salaries of the employees of the specified department
-        database.printSalaries(employeesByDept);
+        app.printSalaries(employeesByDept);
 
         // Disconnect from database
-        database.disconnect();
+        app.disconnect();
     }
 
     /**
@@ -51,7 +55,7 @@ public class App {
     /**
      * Connect to the MySQL database.
      */
-    public void connect() {
+    public void connect(String location, int delay) {
         try {
             // Load Database driver
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -65,13 +69,15 @@ public class App {
             System.out.println("Connecting to database...");
             try {
                 // Wait a bit for db to start
-                Thread.sleep(30000);
+                Thread.sleep(delay);
                 // Connect to database
-                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?useSSL=false", "root", "example");
+                con = DriverManager.getConnection("jdbc:mysql://" + location
+                                + "/employees?allowPublicKeyRetrieval=true&useSSL=false",
+                        "root", "example");
                 System.out.println("Successfully connected");
                 break;
             } catch (SQLException sqle) {
-                System.out.println("Failed to connect to database attempt " + Integer.toString(i));
+                System.out.println("Failed to connect to database attempt " +                                  Integer.toString(i));
                 System.out.println(sqle.getMessage());
             } catch (InterruptedException ie) {
                 System.out.println("Thread interrupted? Should not happen.");
